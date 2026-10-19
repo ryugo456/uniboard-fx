@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UniBoard FX</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header id="logo">
+  <svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true">
+    <rect x="2" y="2" width="36" height="36" rx="7" fill="#2f6f4f"/>
+    <g fill="#e8b04a"><circle cx="11" cy="11" r="3"/><circle cx="20" cy="11" r="3"/><circle cx="29" cy="11" r="3"/><circle cx="11" cy="20" r="3"/><circle cx="29" cy="20" r="3"/><circle cx="11" cy="29" r="3"/><circle cx="20" cy="29" r="3"/><circle cx="29" cy="29" r="3"/></g>
+    <path d="M11 20 H29" stroke="#ff4350" stroke-width="3" stroke-linecap="round"/>
+  </svg>
+  <div><b>UniBoard</b> <span>FX</span></div>
+</header>
+
+<div id="titlebar">
+  <div id="filename">無題</div>
+  <nav id="menubar">
+    <div class="menu"><button>File</button><div class="drop">
+      <button data-cmd="new">新規</button>
+      <button data-cmd="open">開く… <kbd>Ctrl+O</kbd></button>
+      <button data-cmd="save">保存 <kbd>Ctrl+S</kbd></button>
+      <button data-cmd="saveAs">名前を付けて保存…</button>
+      <hr>
+      <button data-cmd="importNet">回路図(ネットリスト / draw.io)を取り込む…</button>
+      <button data-cmd="pasteNet">ネットリストを貼り付けて取り込む…</button>
+      <button data-cmd="importImg">回路図の画像を取り込む…</button>
+      <hr>
+      <button data-cmd="csv">部品リストをCSV出力</button>
+    </div></div>
+    <div class="menu"><button>Edit</button><div class="drop">
+      <button data-cmd="undo">元に戻す <kbd>Ctrl+Z</kbd></button>
+      <button data-cmd="redo">やり直し <kbd>Ctrl+Y</kbd></button>
+      <hr>
+      <button data-cmd="cut">切り取り <kbd>Ctrl+X</kbd></button>
+      <button data-cmd="copy">コピー <kbd>Ctrl+C</kbd></button>
+      <button data-cmd="paste">貼り付け <kbd>Ctrl+V</kbd></button>
+      <button data-cmd="dup">複製 <kbd>Ctrl+D</kbd></button>
+      <button data-cmd="del">削除 <kbd>Delete</kbd></button>
+      <hr>
+      <button data-cmd="selAll">すべて選択 <kbd>Ctrl+A</kbd></button>
+      <button data-cmd="rotate">90°回転 <kbd>R</kbd></button>
+    </div></div>
+    <div class="menu"><button>Options</button><div class="drop">
+      <button data-cmd="rats" class="chk">未配線をラッツネスト(点線)で表示</button>
+      <button data-cmd="labels" class="chk">部品番号を表示</button>
+      <button data-cmd="marks" class="chk">エラー箇所を基板に表示</button>
+    </div></div>
+    <div class="menu"><button>Tools</button><div class="drop">
+      <button data-cmd="toolSelect">選択ツール <kbd>V</kbd></button>
+      <button data-cmd="toolWire">配線ツール <kbd>W</kbd></button>
+      <button data-cmd="toolHand">ハンドツール（表示位置を移動） <kbd>H</kbd></button>
+      <hr>
+      <button data-cmd="placeAll">未配置の部品を一括配置</button>
+      <button data-cmd="soundcheck">SoundCheck（音のシミュレーション）</button>
+      <hr>
+      <div class="sub">サンプル回路</div>
+      <div id="sampleItems"></div>
+    </div></div>
+    <div class="menu"><button>Window</button><div class="drop">
+      <button data-cmd="toggleLeft">左パネルの表示切替</button>
+      <button data-cmd="toggleRight">右パネルの表示切替</button>
+      <hr>
+      <button data-cmd="zoomIn">拡大 <kbd>+</kbd></button>
+      <button data-cmd="zoomOut">縮小 <kbd>-</kbd></button>
+      <button data-cmd="zoomFit">全体を表示 <kbd>0</kbd></button>
+    </div></div>
+    <div class="menu"><button>Help</button><div class="drop">
+      <button data-cmd="help">使い方とショートカット</button>
+    </div></div>
+  </nav>
+</div>
+
+<button id="soundcheck" data-cmd="soundcheck">SoundCheck</button>
+
+<aside id="left">
+  <section class="panel" id="p-parts">
+    <h2>Parts List <span class="grow"></span>
+      <button class="mini" data-cmd="placeAll" title="未配置の部品を基板に一括配置">一括配置</button>
+      <button class="mini" data-cmd="csv" title="CSVで保存">CSV</button></h2>
+    <div class="body" id="partsList"></div>
+  </section>
+  <section class="panel" id="p-errors">
+    <h2>回路図エラー判定 <span class="grow"></span><span id="issueCount"></span></h2>
+    <div class="body"><ul id="issues"></ul></div>
+  </section>
+  <section class="panel" id="p-schem">
+    <h2>回路図 <span class="grow"></span>
+      <button class="mini" data-cmd="importNet">取込</button>
+      <button class="mini" data-cmd="importImg">画像</button></h2>
+    <div class="body" id="schem"></div>
+  </section>
+</aside>
+
+<main class="panel" id="p-main">
+  <h2>Mainコンソール
+    <span class="tb">
+      <button data-cmd="undo" title="元に戻す (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+      <button data-cmd="redo" title="やり直し (Ctrl+Y)"><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+      <i></i>
+      <button data-cmd="toolSelect" id="tSelect" title="選択ツール (V)"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 2-2 6z"/></svg></button>
+      <button data-cmd="toolWire" id="tWire" title="配線ツール (W): 穴から穴へドラッグ"><svg viewBox="0 0 24 24"><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="5" r="2.5"/><path d="M7 17 17 7"/></svg></button>
+      <button data-cmd="toolHand" id="tHand" title="ハンドツール (H): ドラッグで表示位置を動かす"><svg viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M11 10.5V4a1.5 1.5 0 0 1 3 0v7"/><path d="M14 10.5V5.5a1.5 1.5 0 0 1 3 0V12"/><path d="M17 8.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-5-2.7L4.6 15a1.5 1.5 0 0 1 2.5-1.7L8 14.5"/></svg></button>
+      <button data-cmd="rotate" title="90°回転 (R)"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+      <button data-cmd="del" title="削除 (Delete)"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+      <i></i>
+      <button data-cmd="zoomOut" title="縮小">−</button>
+      <span id="zoomLabel">100%</span>
+      <button data-cmd="zoomIn" title="拡大">＋</button>
+      <button data-cmd="zoomFit" title="全体を表示"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </span>
+    <span class="grow"></span>
+    <span id="hoverInfo"></span>
+  </h2>
+  <div id="canvasWrap"><div id="stage">
+    <svg id="board" xmlns="http://www.w3.org/2000/svg">
+      <g id="gBoard"></g><g id="gParts"></g><g id="gOver"></g>
+    </svg>
+  </div></div>
+</main>
+
+<aside id="right">
+  <section class="panel" id="p-side">
+    <h2>サイドバー</h2>
+    <div class="body">
+      <div id="palette" title="クリックで追加、または基板へドラッグ"></div>
+      <div id="props"></div>
+    </div>
+  </section>
+  <section class="panel" id="p-in">
+    <h2>入力波形 <span class="grow"></span>
+      <button class="mini play" id="playIn" data-label="再生" title="入力音を再生">▶ 再生</button></h2>
+    <div class="body sound">
+      <div class="row">
+        <select id="srcSel"><option value="guitar">内蔵ギター(リフ)</option><option value="file">音声ファイル…</option></select>
+        <label title="ギター出力の大きさ(ピーク電圧)。シングルコイル0.1〜0.3V、ハムバッカー0.5V前後">レベル <input id="level" type="number" min="0.01" max="5" step="0.05" value="0.5">V</label>
+      </div>
+      <canvas id="cvIn"></canvas>
+    </div>
+  </section>
+  <section class="panel" id="p-out">
+    <h2>出力波形 <span class="grow"></span>
+      <button class="mini play" id="playOut" data-label="回路図" title="回路図どおりの回路を通った音を再生">▶ 回路図</button>
+      <button class="mini play" id="playBoard" data-label="基板" title="基板の配線・値どおりの回路を通った音を再生">▶ 基板</button>
+      <button class="mini play" id="playRef" data-label="手本" title="手本の音を再生">▶ 手本</button></h2>
+    <div class="body sound">
+      <div class="row">
+        <label>入力源 <select id="inSel"></select></label>
+        <label>出力 <select id="outSel"></select></label>
+      </div>
+      <div class="row">
+        <button class="mini" id="refBtn" title="狙った音の録音。入力波形と同じ演奏を目標のエフェクターに通し、アンプやマイクを通さずライン(DI)で録ったものを使ってください。アンプ・キャビ・マイク経由の録音は音色が大きく変わるため正しく比べられません">手本の音…</button>
+        <span id="refName">（なし）</span>
+        <span class="grow"></span>
+        <span class="seg" id="viewSel"><button data-view="wave" class="on" title="30msの波形拡大">波形</button><button data-view="tone" title="帯域ごとの音量バランス">音色</button></span>
+      </div>
+      <canvas id="cvOut"></canvas>
+      <canvas id="cvDetail" title="波形: 30msの拡大（上の波形をクリックで位置を変更）／音色: 帯域ごとの音量バランス"></canvas>
+      <div id="verdict" class="verdict"></div>
+      <div id="verdictRef" class="verdict"></div>
+      <div id="simStatus">SoundCheck を押すと、回路を通った音を計算します</div>
+    </div>
+  </section>
+</aside>
+
+<footer id="sheets">
+  <button data-cmd="addSheet" title="シートを追加">＋</button>
+  <button data-cmd="delSheet" title="このシートを削除">−</button>
+  <div id="tabs"></div>
+  <span class="grow"></span>
+  <span id="status"></span>
+</footer>
+
+<dialog id="dlg"><form method="dialog"><div id="dlgBody"></div><menu id="dlgBtns"></menu></form></dialog>
+
+<script src="sim.js"></script>
+<script src="check.js"></script>
+<script src="drawio.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

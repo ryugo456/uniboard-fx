@@ -1,0 +1,7 @@
+# draw.io の自動バックアップ
+*.bkp
+# 市販エフェクターの回路図（手元の参照用。リポジトリには含めない）
+ZVEX Fuzz Factory 回路図.drawio
+ZVEX Fuzz Factory 回路図.drawio.pdf
+# 手元の開発用設定
+.claude/
